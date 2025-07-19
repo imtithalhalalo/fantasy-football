@@ -2,6 +2,7 @@ import { Formik, Form } from "formik";
 import axios from "axios";
 import { Button, TextField, Box, Typography, Paper } from "@mui/material";
 import LoginSchema from "./utils/LoginSchema";
+ import { ToastContainer, toast } from 'react-toastify';
 
 export default function Login() {
   return (
@@ -36,9 +37,11 @@ export default function Login() {
             try {
               const res = await axios.post("http://localhost:5000/auth", values);
               localStorage.setItem("token", res.data.token);
-
+              toast(res.data.isNew
+                ? "Registered successfully!"
+                : "Logged in successfully!")
             } catch (err) {
-              console.log(err)
+              toast("Error: " + err.response?.data?.message || "Something went wrong")
             } finally {
               setSubmitting(false);
             }
@@ -86,6 +89,7 @@ export default function Login() {
                 {isSubmitting ? "Loading..." : "Submit"}
               </Button>
               
+              <ToastContainer />
             </Form>
           )}
         </Formik>
