@@ -1,10 +1,8 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import { prisma } from "../prismaClient.js"; 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
@@ -16,7 +14,7 @@ router.post("/", async (req, res) => {
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) return res.status(401).json({ message: "Invalid password" });
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret123", { expiresIn: "7d" });
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
       return res.json({ token, isNew: false });
     }
 
@@ -49,7 +47,7 @@ router.post("/", async (req, res) => {
 
     await prisma.player.createMany({ data: playerData });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret123", { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.json({ token, isNew: true });
   } catch (err) {
