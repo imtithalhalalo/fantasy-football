@@ -1,8 +1,18 @@
+import { useState, useEffect } from "react";
 import Login from "./pages/Login";
+import TeamDashboard from "./pages/TeamDashboard";
 
-function App() {
+export default function App() {
+  const [loggedIn, setLoggedIn] = useState(false);
 
-  return <Login />;
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setLoggedIn(!!token);
+  }, []);
+
+  return loggedIn ? (
+    <TeamDashboard />
+  ) : (
+    <Login onLogin={() => setLoggedIn(true)} />
+  );
 }
-
-export default App
