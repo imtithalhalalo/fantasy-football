@@ -117,6 +117,12 @@ router.post("/buy/:playerId", authMiddleware, async (req, res) => {
     if (sellerTeam.userId === buyerUserId)
       return res.status(400).json({ message: "You already own this player" });
 
+    if (buyerTeam.players.length >= 25)
+      return res.status(400).json({ message: "Cannot exceed 25 players" });
+
+    if (sellerTeam.players.length <= 15)
+      return res.status(400).json({ message: "Seller cannot go below 15 players" });
+
 
     res.json({ message: "Player bought successfully!" });
   } catch (err) {
