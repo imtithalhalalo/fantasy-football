@@ -15,9 +15,20 @@ model User {
 }
 
 model Team {
-  id      Int      @id @default(autoincrement())
-  name    String
-  budget  Int
-  userId  Int      @unique
-  user    User     @relation(fields: [userId], references: [id])
+  id        Int       @id @default(autoincrement())
+  name      String
+  budget    Int
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int       @unique
+  players   Player[]
 }
+
+model Player {
+  id        Int     @id @default(autoincrement())
+  name      String
+  position  String   // GK, DEF, MID, ATT
+  price     Int
+  team      Team     @relation(fields: [teamId], references: [id])
+  teamId    Int
+}
+
