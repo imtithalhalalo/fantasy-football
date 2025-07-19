@@ -12,15 +12,26 @@ const api = axios.create({
 export default function TeamDashboard() {
   const queryClient = useQueryClient();
 
-  const { data: team, isLoading } = useQuery({
-  queryKey: ["team"],
-  queryFn: async () => {
-    const res = await api.get("/team");
-    return res.data;
-  },
-});
+    const { data: team, isLoading } = useQuery({
+        queryKey: ["team"],
+        queryFn: async () => {
+            const res = await api.get("/team");
+            return res.data;
+        },
+    });
 
-
+    const toggleSaleMutation = useMutation({
+        mutationFn: async ({ playerId, isForSale }) => {
+            if (isForSale) {
+                await api.delete(`/transfer/${playerId}`);
+            } else {
+                await api.post(`/transfer/${playerId}`, { askingPrice: 800000 });
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["team"] });
+        },
+    });
 
 
 
@@ -53,8 +64,20 @@ export default function TeamDashboard() {
               ) : (
                 <Typography color="gray">Not for sale</Typography>
               )}
-               
-              
+            <Button
+                sx={{ mt: 1 }}
+                variant="contained"
+                color={player.isForSale ? "error" : "primary"}
+                onClick={() =>
+                  toggleSaleMutation.mutate({
+                    playerId: player.id,
+                    isForSale: player.isForSale,
+                  })
+                }
+                disabled={toggleSaleMutation.isLoading}
+              >
+                {player.isForSale ? "Remove from Sale" : "Put on Sale"}
+              </Button>
             </Paper>
           </Grid>
         ))}
