@@ -2,9 +2,10 @@ import { Formik, Form } from "formik";
 import axios from "axios";
 import { Button, TextField, Box, Typography, Paper } from "@mui/material";
 import LoginSchema from "./utils/LoginSchema";
- import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-export default function Login() {
+export default function Login({ onLogin }) {
   return (
     <Box
       sx={{
@@ -37,11 +38,19 @@ export default function Login() {
             try {
               const res = await axios.post("http://localhost:5000/auth", values);
               localStorage.setItem("token", res.data.token);
-              toast(res.data.isNew
-                ? "Registered successfully!"
-                : "Logged in successfully!")
+
+              toast(
+                res.data.isNew
+                  ? "Registered successfully!"
+                  : "Logged in successfully!"
+              );
+
+              onLogin();
             } catch (err) {
-              toast("Error: " + err.response?.data?.message || "Something went wrong")
+              toast(
+                "Error: " +
+                  (err.response?.data?.message || "Something went wrong")
+              );
             } finally {
               setSubmitting(false);
             }
@@ -62,7 +71,6 @@ export default function Login() {
                 gap: "16px",
               }}
             >
-              {/* Email */}
               <TextField
                 label="Email"
                 name="email"
@@ -73,7 +81,6 @@ export default function Login() {
                 helperText={touched.email && errors.email}
               />
 
-              {/* Password */}
               <TextField
                 label="Password"
                 type="password"
@@ -88,7 +95,6 @@ export default function Login() {
               <Button type="submit" variant="contained" disabled={isSubmitting}>
                 {isSubmitting ? "Loading..." : "Submit"}
               </Button>
-              
               <ToastContainer />
             </Form>
           )}
