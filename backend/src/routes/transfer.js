@@ -130,7 +130,26 @@ router.post("/buy/:playerId", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Not enough budget" });
 
     await prisma.$transaction([
-      
+      prisma.team.update({
+        where: { id: buyerTeam.id },
+        data: {
+          budget: { decrement: transferPrice },
+        },
+      }),
+      prisma.team.update({
+        where: { id: sellerTeam.id },
+        data: {
+          budget: { increment: transferPrice },
+        },
+      }),
+      prisma.player.update({
+        where: { id: playerId },
+        data: {
+          teamId: buyerTeam.id,
+          isForSale: false,
+          askingPrice: null,
+        },
+      }),
     ]);
 
     res.json({ message: "Player bought successfully!" });
