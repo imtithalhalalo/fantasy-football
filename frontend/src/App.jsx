@@ -13,6 +13,10 @@ export default function AppLayout() {
     setLoggedIn(!!token);
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setLoggedIn(false);
+  };
 
   if (!loggedIn) {
     return <Login onLogin={() => setLoggedIn(true)} />;
@@ -50,7 +54,9 @@ export default function AppLayout() {
             <ListItemText primary="Transfer Market" />
           </ListItemButton>
         </List>
-
+        <Button variant="outlined" color="error" onClick={handleLogout}>
+          Logout
+        </Button>
       </Box>
       <Box sx={{ flexGrow: 1, p: 3, overflowY: "auto" }}>
         {selectedTab === "team" && <TeamDashboard />}
