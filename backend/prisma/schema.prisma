@@ -24,11 +24,14 @@ model Team {
 }
 
 model Player {
-  id        Int     @id @default(autoincrement())
-  name      String
-  position  String   // GK, DEF, MID, ATT
-  price     Int
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    Int
+  id           Int     @id @default(autoincrement())
+  name         String
+  position     String
+  price        Int
+  teamId       Int
+  team         Team    @relation(fields: [teamId], references: [id])
+
+  isForSale    Boolean @default(false)
+  askingPrice  Int?
 }
 
