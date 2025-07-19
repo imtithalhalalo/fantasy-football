@@ -89,4 +89,40 @@ router.delete("/:playerId", authMiddleware, async (req, res) => {
 });
 
 
+router.post("/buy/:playerId", authMiddleware, async (req, res) => {
+  try {
+    const buyerUserId = req.userId;
+    const playerId = parseInt(req.params.playerId);
+
+    const buyerTeam = await prisma.team.findUnique({
+      where: { userId: buyerUserId },
+      include: { players: true },
+    });
+
+    if (!buyerTeam) return res.status(404).json({ message: "Your team not found" });
+
+    const sellerPlayer = await prisma.player.findUnique({
+      where: { id: playerId },
+      include: { team: true },
+    });
+
+    if (!sellerPlayer || !sellerPlayer.isForSale)
+      return res.status(404).json({ message: "Player not for sale" });
+
+    const sellerTeam = await prisma.team.findUnique({
+      where: { id: sellerPlayer.teamId },
+      include: { players: true },
+    });
+
+    if (sellerTeam.userId === buyerUserId)
+      return res.status(400).json({ message: "You already own this player" });
+
+
+    res.json({ message: "Player bought successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to buy player" });
+  }
+});
+
 export default router;
