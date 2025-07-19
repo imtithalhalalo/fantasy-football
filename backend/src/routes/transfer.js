@@ -60,5 +60,33 @@ router.post("/:playerId", authMiddleware, async (req, res) => {
   }
 });
 
+router.delete("/:playerId", authMiddleware, async (req, res) => {
+  try {
+    const playerId = parseInt(req.params.playerId);
+
+    const player = await prisma.player.findUnique({
+      where: { id: playerId },
+      include: { team: true },
+    });
+
+    if (!player) return res.status(404).json({ message: "Player not found" });
+    if (player.team.userId !== req.userId)
+      return res.status(403).json({ message: "Not your player" });
+
+    const updated = await prisma.player.update({
+      where: { id: playerId },
+      data: {
+        isForSale: false,
+        askingPrice: null,
+      },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to remove player from transfer" });
+  }
+});
+
 
 export default router;
