@@ -29,6 +29,36 @@ router.get("/", async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch transfer list" });
   }
-})
+});
+
+router.post("/:playerId", authMiddleware, async (req, res) => {
+  try {
+    const playerId = parseInt(req.params.playerId);
+    const { askingPrice } = req.body;
+
+    const player = await prisma.player.findUnique({
+      where: { id: playerId },
+      include: { team: true },
+    });
+
+    if (!player) return res.status(404).json({ message: "Player not found" });
+    if (player.team.userId !== req.userId)
+      return res.status(403).json({ message: "Not your player" });
+
+    const updated = await prisma.player.update({
+      where: { id: playerId },
+      data: {
+        isForSale: true,
+        askingPrice: askingPrice,
+      },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to list player for transfer" });
+  }
+});
+
 
 export default router;
