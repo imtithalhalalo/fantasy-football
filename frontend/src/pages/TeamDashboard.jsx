@@ -46,8 +46,7 @@ export default function TeamDashboard() {
 
   if (isLoading) {
     return (
-      //skeleton
-      <></>
+      <TeamSkeleton />
     );
   }
 
