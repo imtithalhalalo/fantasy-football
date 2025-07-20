@@ -1,13 +1,6 @@
 import { Box, Typography, Paper, Grid, Button } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:5000",
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
-});
+import api from "../api/axiosInstance";
 
 export default function TeamDashboard() {
   const queryClient = useQueryClient();
