@@ -1,5 +1,5 @@
 import express from "express";
-import { prisma } from "../prismaClient.js";
+import { prisma } from "../../utils/prismaClient.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -8,26 +8,31 @@ router.get("/", async (req, res) => {
   try {
     const { team, player, maxPrice } = req.query;
 
-    const where = {
-      isForSale: true,
-      ...(player && { name: { contains: player, mode: "insensitive" } }),
-      ...(maxPrice && { price: { lte: parseInt(maxPrice) } }),
-      ...(team && {
-        team: {
-          name: { contains: team, mode: "insensitive" },
-        },
-      }),
-    };
-
-    const players = await prisma.player.findMany({
-      where,
+    let players = await prisma.player.findMany({
+      where: { isForSale: true },
       include: { team: true },
     });
 
+    if (player) {
+      players = players.filter(p =>
+        p.name.toLowerCase().includes(player.toLowerCase())
+      );
+    }
+
+    if (team) {
+      players = players.filter(p =>
+        p.team?.name.toLowerCase().includes(team.toLowerCase())
+      );
+    }
+
+    if (maxPrice) {
+      const max = parseInt(maxPrice);
+      players = players.filter(p => p.price <= max);
+    }
+
     res.json(players);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch transfer list" });
+    res.status(500).json({ message: err.message });
   }
 });
 
