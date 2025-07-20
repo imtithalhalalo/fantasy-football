@@ -14,6 +14,7 @@ import {
   Divider,
 } from "@mui/material";
 import api from "../api/axiosInstance";
+import { useDebounce } from "../hooks/useDebounce";
 
 export default function TransferMarket() {
   const queryClient = useQueryClient();
@@ -24,16 +25,17 @@ export default function TransferMarket() {
     maxPrice: "",
   });
 
-  const [searchParams, setSearchParams] = useState(filters);
+  const debouncedFilters = useDebounce(filters, 500);
+
   const [message, setMessage] = useState(null);
 
   const { data: players = [], isLoading, isError } = useQuery({
-    queryKey: ["transferList", searchParams],
+    queryKey: ["transferList", debouncedFilters],
     queryFn: async () => {
       const params = {};
-      if (searchParams.team) params.team = searchParams.team;
-      if (searchParams.player) params.player = searchParams.player;
-      if (searchParams.maxPrice) params.maxPrice = searchParams.maxPrice;
+      if (debouncedFilters.team) params.team = debouncedFilters.team;
+      if (debouncedFilters.player) params.player = debouncedFilters.player;
+      if (debouncedFilters.maxPrice) params.maxPrice = debouncedFilters.maxPrice;
       const res = await api.get("/transfer", { params });
       return res.data;
     },
@@ -65,7 +67,7 @@ export default function TransferMarket() {
     if (e.key === "Enter") {
       e.preventDefault();
       const activeInput = e.target;
-      setSearchParams(filters);
+      queryClient.invalidateQueries(["transferList", filters]);
       setTimeout(() => activeInput.focus(), 0);
     }
   };
@@ -118,13 +120,13 @@ export default function TransferMarket() {
           size="small"
         />
         <IconButton
-          onClick={() => setSearchParams(filters)}
+          onClick={() => queryClient.invalidateQueries(["transferList", filters])}
           sx={{ bgcolor: "#9333ea", color: "white", "&:hover": { bgcolor: "#7e22ce" } }}
         >
           <SearchIcon />
         </IconButton>
-
       </Stack>
+
       {message && (
         <Alert
           severity={message.type}
@@ -134,6 +136,7 @@ export default function TransferMarket() {
           {message.text}
         </Alert>
       )}
+
       <Grid container spacing={2}>
         {players.length === 0 && (
           <Typography>No players found matching filters</Typography>
