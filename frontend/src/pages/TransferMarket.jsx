@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import {
@@ -7,6 +7,7 @@ import {
   Typography,
   Paper,
   Grid,
+  Button,
   TextField,
   Stack,
   Alert,
@@ -15,6 +16,7 @@ import {
 import api from "../api/axiosInstance";
 
 export default function TransferMarket() {
+  const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState({
     team: "",
@@ -37,6 +39,20 @@ export default function TransferMarket() {
     },
   });
 
+  const buyMutation = useMutation({
+    mutationFn: async (playerId) => {
+      await api.post(`/transfer/buy/${playerId}`);
+    },
+    onSuccess: () => {
+      setMessage({ type: "success", text: "Player bought successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["transferList"] });
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+    },
+    onError: (error) => {
+      const errMsg = error.response?.data?.message || "Failed to buy player";
+      setMessage({ type: "error", text: errMsg });
+    },
+  });
 
   const handleChange = (e) => {
     setFilters((prev) => ({
@@ -148,6 +164,18 @@ export default function TransferMarket() {
                 On Sale for ${player.askingPrice?.toLocaleString() || "?"}
               </Typography>
 
+              <Button
+                sx={{
+                  mt: 1,
+                  bgcolor: "#9333ea",
+                  "&:hover": { bgcolor: "#9233eaa8" },
+                }}
+                variant="contained"
+                disabled={buyMutation.isLoading}
+                onClick={() => buyMutation.mutate(player.id)}
+              >
+                Buy
+              </Button>
             </Paper>
           </Grid>
         ))}
