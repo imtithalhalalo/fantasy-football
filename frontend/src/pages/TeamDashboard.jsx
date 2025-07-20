@@ -1,14 +1,9 @@
-import {
-  Box,
-  Typography,
-  Paper,
-  Grid,
-  Button,
-  Divider,
-} from "@mui/material";
+import { useState } from "react";
+import { Box, Typography, Paper, Grid, Button, Divider } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import TeamSkeleton from "./skeletons/TeamDashBoardSkeleton";
+import SalePriceDialog from "./components/SalePriceDialog";
 
 export default function TeamDashboard() {
   const queryClient = useQueryClient();
@@ -21,38 +16,42 @@ export default function TeamDashboard() {
     },
   });
 
-  const toggleSaleMutation = useMutation({
-    mutationFn: async ({ playerId, isForSale }) => {
-      if (isForSale) {
-        await api.delete(`/transfer/${playerId}`);
-      } else {
-        await api.post(`/transfer/${playerId}`, { askingPrice: 800000 });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team"] });
-    },
+  const addToSaleMutation = useMutation({
+    mutationFn: async ({ playerId, askingPrice }) =>
+      api.post(`/transfer/${playerId}`, { askingPrice }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["team"] }),
   });
 
-  const groupPlayersByPosition = (players) => {
-    return players.reduce((groups, player) => {
-      if (!groups[player.position]) {
-        groups[player.position] = [];
-      }
+  const removeFromSaleMutation = useMutation({
+    mutationFn: async (playerId) => api.delete(`/transfer/${playerId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["team"] }),
+  });
+
+  const groupPlayersByPosition = (players) =>
+    players.reduce((groups, player) => {
+      if (!groups[player.position]) groups[player.position] = [];
       groups[player.position].push(player);
       return groups;
     }, {});
-  };
 
-  if (isLoading) {
-    return (
-      <TeamSkeleton />
-    );
-  }
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
+  const handleOpenDialog = (player) => setSelectedPlayer(player);
+  const handleCloseDialog = () => setSelectedPlayer(null);
+
+  if (isLoading) return <TeamSkeleton />;
   if (!team) return <Typography>No team found</Typography>;
 
   const groupedPlayers = groupPlayersByPosition(team.players);
+
+  const handleConfirmSale = (askingPrice) => {
+    if (!selectedPlayer) return;
+    addToSaleMutation.mutate({
+      playerId: selectedPlayer.id,
+      askingPrice,
+    });
+    handleCloseDialog();
+  };
 
   return (
     <Box sx={{ p: 4, bgcolor: "white", minHeight: "100vh" }}>
@@ -125,13 +124,17 @@ export default function TeamDashboard() {
                       },
                     }}
                     variant="contained"
-                    onClick={() =>
-                      toggleSaleMutation.mutate({
-                        playerId: player.id,
-                        isForSale: player.isForSale,
-                      })
+                    onClick={() => {
+                      if (player.isForSale) {
+                        removeFromSaleMutation.mutate(player.id);
+                      } else {
+                        handleOpenDialog(player);
+                      }
+                    }}
+                    disabled={
+                      removeFromSaleMutation.isLoading ||
+                      addToSaleMutation.isLoading
                     }
-                    disabled={toggleSaleMutation.isLoading}
                   >
                     {player.isForSale ? "Remove from Sale" : "Put on Sale"}
                   </Button>
@@ -141,6 +144,13 @@ export default function TeamDashboard() {
           </Grid>
         </Box>
       ))}
+
+      <SalePriceDialog
+        open={!!selectedPlayer}
+        player={selectedPlayer}
+        onClose={handleCloseDialog}
+        onConfirm={handleConfirmSale}
+      />
     </Box>
   );
 }
