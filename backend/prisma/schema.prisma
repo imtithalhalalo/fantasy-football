@@ -8,30 +8,47 @@ generator client {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
+  id       Int    @id @default(autoincrement())
+  email    String @unique
   password String
   team     Team?
-}
 
-model Team {
-  id        Int       @id @default(autoincrement())
-  name      String
-  budget    Int
-  user      User      @relation(fields: [userId], references: [id])
-  userId    Int       @unique
-  players   Player[]
+  notifications Notification[]
 }
 
 model Player {
-  id           Int     @id @default(autoincrement())
-  name         String
-  position     String
-  price        Int
-  teamId       Int
-  team         Team    @relation(fields: [teamId], references: [id])
+  id       Int    @id @default(autoincrement())
+  name     String
+  position String
+  price    Int
+  teamId   Int
+  team     Team   @relation(fields: [teamId], references: [id])
 
-  isForSale    Boolean @default(false)
-  askingPrice  Int?
+  isForSale   Boolean @default(false)
+  askingPrice Int?
+
+  boughtAt     DateTime?
+  boughtFromId Int?
+  boughtFrom   Team?     @relation("BoughtFromTeam", fields: [boughtFromId], references: [id])
 }
 
+model Team {
+  id     Int    @id @default(autoincrement())
+  name   String
+  budget Int
+
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  players       Player[]
+  boughtPlayers Player[] @relation("BoughtFromTeam")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
