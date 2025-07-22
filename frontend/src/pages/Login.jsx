@@ -5,8 +5,11 @@ import { Button, TextField, Box, Typography, Paper } from "@mui/material";
 import LoginSchema from "./utils/LoginSchema";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Login({ onLogin }) {
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
@@ -71,6 +74,7 @@ export default function Login({ onLogin }) {
                 );
 
                 onLogin();
+                navigate("/team");
               } catch (err) {
                 toast(
                   "Error: " +

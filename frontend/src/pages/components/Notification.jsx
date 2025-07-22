@@ -1,14 +1,24 @@
 import { useState, useEffect, useRef } from "react";
-import { IconButton, Badge, Menu, MenuItem, Typography, Snackbar, Alert } from "@mui/material";
+import {
+  IconButton,
+  Badge,
+  Menu,
+  MenuItem,
+  Typography,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 export default function Notification() {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [toastMsg, setToastMsg] = useState(""); 
+  const [toastMsg, setToastMsg] = useState("");
   const [toastOpen, setToastOpen] = useState(false);
   const prevCount = useRef(0);
+  const navigate = useNavigate();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
@@ -28,7 +38,7 @@ export default function Notification() {
     }
 
     if (notifications.length > prevCount.current) {
-      const newest = notifications[0]; 
+      const newest = notifications[0];
       if (newest) {
         new Audio("/notification.wav").play();
 
@@ -42,7 +52,10 @@ export default function Notification() {
 
   return (
     <>
-      <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ color: "white" }}>
+      <IconButton
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={{ color: "white" }}
+      >
         <Badge badgeContent={unreadCount} color="error">
           <NotificationsIcon sx={{ color: "white" }} />
         </Badge>
@@ -63,13 +76,16 @@ export default function Notification() {
 
       <Snackbar
         open={toastOpen}
-        autoHideDuration={4000} 
+        autoHideDuration={4000}
         onClose={() => setToastOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           severity="info"
           onClose={() => setToastOpen(false)}
+          onClick={() => {
+            navigate("/team");
+          }}
           sx={{ bgcolor: "white", color: "#9333ea" }}
         >
           {toastMsg}
