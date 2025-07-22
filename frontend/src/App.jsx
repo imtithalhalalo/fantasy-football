@@ -7,22 +7,23 @@ import {
   ListItemText,
   Typography,
   Button,
-  IconButton,
   Fab,
+  AppBar,
+  Toolbar,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import TeamDashboard from "./pages/TeamDashboard";
 import TransferMarket from "./pages/TransferMarket";
 import Login from "./pages/Login";
+import Notification from "./pages/components/Notification";
 
 const drawerWidth = 240;
 
 export default function AppLayout() {
   const [selectedTab, setSelectedTab] = useState("team");
   const [loggedIn, setLoggedIn] = useState(false);
-
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -61,15 +62,16 @@ export default function AppLayout() {
           Fantasy Football
         </Typography>
 
-        <IconButton
+        <Fab
           onClick={() => setDrawerOpen(false)}
+          size="small"
           sx={{
-            color: "white",
-            "&:hover": { background: "rgba(255,255,255,0.1)" },
+            bgcolor: "#7e22ce",
+            "&:hover": { bgcolor: "#6b21a8" },
           }}
         >
-          <ChevronLeftIcon />
-        </IconButton>
+          <ChevronLeftIcon sx={{ color: "white" }} />
+        </Fab>
       </Box>
 
       <Box sx={{ flexGrow: 1 }}>
@@ -120,6 +122,7 @@ export default function AppLayout() {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", width: "100vw" }}>
+      {/* ✅ Drawer on left */}
       {drawerOpen && (
         <Drawer
           open={drawerOpen}
@@ -137,35 +140,57 @@ export default function AppLayout() {
         </Drawer>
       )}
 
-      {!drawerOpen && (
-        <Fab
-          color="primary"
-          onClick={() => setDrawerOpen(true)}
-          sx={{
-            position: "fixed",
-            top: 20,
-            left: 30,
-            bgcolor: "#9333ea",
-            "&:hover": { bgcolor: "#7e22ce" },
-          }}
-        >
-          <MenuIcon />
-        </Fab>
-      )}
-
       <Box
         sx={{
           flexGrow: 1,
           ml: drawerOpen ? `${drawerWidth}px` : "0px",
           transition: "margin 0.3s ease",
           bgcolor: "white",
-          alignContent: 'center',
           overflowY: "auto",
-          pl: 10,
+          position: "relative",
         }}
       >
-        {selectedTab === "team" && <TeamDashboard />}
-        {selectedTab === "transfer" && <TransferMarket />}
+        <AppBar
+          position="sticky"
+          sx={{
+            bgcolor: "white",
+            color: "#333",
+            boxShadow: "none",
+            borderBottom: "1px solid #ddd",
+          }}
+        >
+          <Toolbar
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Fab
+              onClick={() => setDrawerOpen(!drawerOpen)}
+              size="medium"
+              sx={{
+                bgcolor: "#9333ea",
+                "&:hover": { bgcolor: "#7e22ce" },
+              }}
+            >
+              <MenuIcon sx={{ color: "white" }} />
+            </Fab>
+            <Fab
+              size="medium"
+              sx={{
+                bgcolor: "#9333ea",
+                "&:hover": { bgcolor: "#7e22ce" },
+              }}
+            >
+              <Notification />
+            </Fab>
+          </Toolbar>
+        </AppBar>
+        <Box sx={{ p: 4 }}>
+          {selectedTab === "team" && <TeamDashboard />}
+          {selectedTab === "transfer" && <TransferMarket />}
+        </Box>
       </Box>
     </Box>
   );
