@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
   Typography,
@@ -12,9 +13,14 @@ import {
   Stack,
   Alert,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import api from "../api/axiosInstance";
 import { useDebounce } from "../hooks/useDebounce";
+import confetti from "canvas-confetti";
 
 export default function TransferMarket() {
   const queryClient = useQueryClient();
@@ -28,27 +34,49 @@ export default function TransferMarket() {
   const debouncedFilters = useDebounce(filters, 500);
 
   const [message, setMessage] = useState(null);
-
-  const { data: players = [], isLoading, isError } = useQuery({
+  const {
+    data: team
+  } = useQuery({
+    queryKey: ["team"],
+    queryFn: async () => {
+      const res = await api.get("/team");
+      return res.data;
+    },
+  });
+  
+  const {
+    data: players = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["transferList", debouncedFilters],
     queryFn: async () => {
       const params = {};
       if (debouncedFilters.team) params.team = debouncedFilters.team;
       if (debouncedFilters.player) params.player = debouncedFilters.player;
-      if (debouncedFilters.maxPrice) params.maxPrice = debouncedFilters.maxPrice;
+      if (debouncedFilters.maxPrice)
+        params.maxPrice = debouncedFilters.maxPrice;
       const res = await api.get("/transfer", { params });
       return res.data;
     },
   });
+
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const buyMutation = useMutation({
     mutationFn: async (playerId) => {
       await api.post(`/transfer/buy/${playerId}`);
     },
     onSuccess: () => {
-      setMessage({ type: "success", text: "Player bought successfully!" });
+      setMessage({ type: "success", text: "🎉 Player bought successfully!" });
       queryClient.invalidateQueries({ queryKey: ["transferList"] });
       queryClient.invalidateQueries({ queryKey: ["team"] });
+
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+      });
     },
     onError: (error) => {
       const errMsg = error.response?.data?.message || "Failed to buy player";
@@ -72,6 +100,12 @@ export default function TransferMarket() {
     }
   };
 
+  const handleConfirmBuy = () => {
+    if (!selectedPlayer) return;
+    buyMutation.mutate(selectedPlayer.id);
+    setSelectedPlayer(null);
+  };
+
   if (isLoading)
     return (
       <Box sx={{ p: 4, bgcolor: "white", minHeight: "100vh" }}>
@@ -87,10 +121,15 @@ export default function TransferMarket() {
 
   return (
     <Box sx={{ p: 4, bgcolor: "white", minHeight: "100vh" }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold", color: "#9333ea", mb: 2 }}>
+      <Typography
+        variant="h4"
+        sx={{ fontWeight: "bold", color: "#9333ea", mb: 2 }}
+      >
         Transfer Market
       </Typography>
-
+      <Typography variant="h6" sx={{ mb: 1, color: "#555" }}>
+        Budget: ${team.budget.toLocaleString()}
+      </Typography>
       <Divider sx={{ mb: 3 }} />
 
       <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
@@ -120,8 +159,14 @@ export default function TransferMarket() {
           size="small"
         />
         <IconButton
-          onClick={() => queryClient.invalidateQueries(["transferList", filters])}
-          sx={{ bgcolor: "#9333ea", color: "white", "&:hover": { bgcolor: "#7e22ce" } }}
+          onClick={() =>
+            queryClient.invalidateQueries(["transferList", filters])
+          }
+          sx={{
+            bgcolor: "#9333ea",
+            color: "white",
+            "&:hover": { bgcolor: "#7e22ce" },
+          }}
         >
           <SearchIcon />
         </IconButton>
@@ -158,9 +203,6 @@ export default function TransferMarket() {
                 {player.name} ({player.position})
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Price: ${player.price.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
                 Team: {player.team.name}
               </Typography>
               <Typography sx={{ color: "#ea580c", fontWeight: "bold" }}>
@@ -175,7 +217,7 @@ export default function TransferMarket() {
                 }}
                 variant="contained"
                 disabled={buyMutation.isLoading}
-                onClick={() => buyMutation.mutate(player.id)}
+                onClick={() => setSelectedPlayer(player)}
               >
                 Buy
               </Button>
@@ -183,6 +225,62 @@ export default function TransferMarket() {
           </Grid>
         ))}
       </Grid>
+
+      {/* TODO: move to separate component */}
+      <Dialog
+        open={!!selectedPlayer}
+        fullWidth
+        maxWidth="sm"
+        onClose={(_, reason) => {
+          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
+          setSelectedPlayer(null);
+        }}
+      >
+        <DialogTitle sx={{ m: 0, p: 2, position: "relative" }}>
+          Confirm Purchase
+          <IconButton
+            aria-label="close"
+            onClick={() => setSelectedPlayer(null)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedPlayer && (
+            <>
+              <Typography>
+                Are you sure you want to buy{" "}
+                <strong>{selectedPlayer.name}</strong>?
+              </Typography>
+              <Typography sx={{ mt: 1 }}>
+                Original Price:{" "}
+                <strong>${selectedPlayer.askingPrice.toLocaleString()}</strong>
+              </Typography>
+              <Typography sx={{ color: "green", mt: 1 }}>
+                Discounted Price (95%):{" "}
+                <strong>
+                  ${(selectedPlayer.askingPrice * 0.95).toLocaleString()}
+                </strong>
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleConfirmBuy}
+            variant="contained"
+            sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
+          >
+            Confirm & Buy
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
