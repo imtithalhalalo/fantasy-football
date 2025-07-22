@@ -13,6 +13,13 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import TeamDashboard from "./pages/TeamDashboard";
 import TransferMarket from "./pages/TransferMarket";
 import Login from "./pages/Login";
@@ -21,21 +28,31 @@ import Notification from "./pages/components/Notification";
 const drawerWidth = 240;
 
 export default function AppLayout() {
-  const [selectedTab, setSelectedTab] = useState("team");
   const [loggedIn, setLoggedIn] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    setLoggedIn(!!token);
-  }, []);
+    const isLoggedIn = !!token;
+    setLoggedIn(isLoggedIn);
+
+    if (isLoggedIn && location.pathname === "/login") {
+      navigate("/team");
+    }
+  }, [location.pathname, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     setLoggedIn(false);
   };
 
-  if (!loggedIn) {
+  if (!loggedIn && location.pathname !== "/login") {
+    return <Navigate to="/login" />;
+  }
+
+  if (!loggedIn && location.pathname === "/login") {
     return <Login onLogin={() => setLoggedIn(true)} />;
   }
 
@@ -61,7 +78,6 @@ export default function AppLayout() {
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
           Fantasy Football
         </Typography>
-
         <Fab
           onClick={() => setDrawerOpen(false)}
           size="small"
@@ -77,8 +93,8 @@ export default function AppLayout() {
       <Box sx={{ flexGrow: 1 }}>
         <List>
           <ListItemButton
-            selected={selectedTab === "team"}
-            onClick={() => setSelectedTab("team")}
+            selected={location.pathname === "/team"}
+            onClick={() => navigate("/team")}
             sx={{
               color: "white",
               "&.Mui-selected": { backgroundColor: "#7e22ce" },
@@ -88,8 +104,8 @@ export default function AppLayout() {
           </ListItemButton>
 
           <ListItemButton
-            selected={selectedTab === "transfer"}
-            onClick={() => setSelectedTab("transfer")}
+            selected={location.pathname === "/transfer"}
+            onClick={() => navigate("/transfer")}
             sx={{
               color: "white",
               "&.Mui-selected": { backgroundColor: "#7e22ce" },
@@ -122,16 +138,19 @@ export default function AppLayout() {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", width: "100vw" }}>
-      {/* ✅ Drawer on left */}
       {drawerOpen && (
         <Drawer
           open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          variant="temporary" 
+          ModalProps={{
+            keepMounted: true, 
+          }}
           sx={{
             width: drawerWidth,
             flexShrink: 0,
             "& .MuiDrawer-paper": {
               width: drawerWidth,
-              position: "relative",
               boxSizing: "border-box",
             },
           }}
@@ -187,9 +206,17 @@ export default function AppLayout() {
             </Fab>
           </Toolbar>
         </AppBar>
+
         <Box sx={{ p: 4 }}>
-          {selectedTab === "team" && <TeamDashboard />}
-          {selectedTab === "transfer" && <TransferMarket />}
+          <Routes>
+            <Route path="/team" element={<TeamDashboard />} />
+            <Route path="/transfer" element={<TransferMarket />} />
+            <Route
+              path="/login"
+              element={<Login onLogin={() => setLoggedIn(true)} />}
+            />
+            <Route path="*" element={<Navigate to="/team" />} />
+          </Routes>
         </Box>
       </Box>
     </Box>
