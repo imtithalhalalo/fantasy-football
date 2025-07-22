@@ -8,7 +8,15 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     const team = await prisma.team.findUnique({
       where: { userId: req.userId },
-      include: { players: true },
+      include: {
+        players: {
+          include: {
+            boughtFrom: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
     });
 
     if (!team) {
