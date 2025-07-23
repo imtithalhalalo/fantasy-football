@@ -39,10 +39,19 @@ export default function Notification() {
       prevCount.current = notifications.length;
       return;
     }
+
     if (notifications.length > prevCount.current) {
       const newest = notifications[0];
+      let soundFile = "";
+
       if (newest) {
-        new Audio("/notification.wav").play();
+        if (newest.message.includes("You")) {
+          soundFile = "/buyer.wav";
+        } else if (newest.message.includes("Team")) {
+          soundFile = "/seller.wav";
+        }
+        if (soundFile) new Audio(soundFile).play();
+
         setToastMsg(newest.message);
         setToastOpen(true);
       }
@@ -50,21 +59,40 @@ export default function Notification() {
     prevCount.current = notifications.length;
   }, [notifications]);
 
-  const handleMarkAsRead = async (id) => {
+  const handleMarkAllAsRead = async () => {
     try {
-      await api.post(`/notifications/read/${id}`);
+      await api.post("/notifications/read-all");
       queryClient.invalidateQueries(["notifications"]);
     } catch (err) {
-      console.error("Failed to mark as read:", err);
+      console.error(err);
+    }
+  };
+
+  const handleOpenMenu = (e) => {
+    setAnchorEl(e.currentTarget);
+
+    if (unreadCount > 0) {
+      handleMarkAllAsRead();
+    }
+  };
+
+  const handleDeleteNotification = async (id) => {
+    try {
+      queryClient.setQueryData(["notifications"], (old = []) =>
+        old.filter((n) => n.id !== id)
+      );
+
+      await api.delete(`/notifications/${id}`);
+
+      queryClient.invalidateQueries(["notifications"]);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
     <>
-      <IconButton
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        sx={{ color: "white" }}
-      >
+      <IconButton onClick={handleOpenMenu} sx={{ color: "white" }}>
         <Badge badgeContent={unreadCount} color="error">
           <NotificationsIcon sx={{ color: "white" }} />
         </Badge>
@@ -90,10 +118,7 @@ export default function Notification() {
               gap: 1,
             }}
           >
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              onClick={() => handleMarkAsRead(n.id)}
-            >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {!n.isRead && (
                 <Box
                   sx={{
@@ -118,7 +143,7 @@ export default function Notification() {
 
             <IconButton
               size="small"
-              onClick={() => handleMarkAsRead(n.id)}
+              onClick={() => handleDeleteNotification(n.id)}
               sx={{
                 color: "#9333ea",
                 "&:hover": { bgcolor: "rgba(147, 51, 234, 0.1)" },
