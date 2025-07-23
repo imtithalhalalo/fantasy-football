@@ -144,4 +144,9 @@ Make sure your `.env` file contains the correct `DATABASE_URL`.
 
 ## Environment Variables
 
-Make sure to add your `.env` file
+Make sure to add your `.env` file and JWT_SECRET
+```sh
+DATABASE_URL="file:./dev.db" (change according to db link)
+PORT=5000
+JWT_SECRET='create-any-jwt'
+```
