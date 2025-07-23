@@ -37,6 +37,7 @@ asking price.
 - Adding SideBar with logout button                                         ~2 hr
 - Updating Team Dashboard to show cards with button to allow sale ~30 mins
 -  Drawer/ Sidebar layout                                   ~1 hr
+- Refactoring                                               ~15 mins
 
 ## Market Transfer & UI Enhancements
 - Filter Api                                                ~30 mins
