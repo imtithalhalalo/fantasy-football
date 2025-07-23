@@ -21,7 +21,43 @@ router.post("/read/:id", authMiddleware, async (req, res) => {
     data: { isRead: true }
   });
   res.json({ success: true });
+})
+
+router.post("/read-all", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    await prisma.notification.updateMany({
+      where: { userId },  
+      data: { isRead: true }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to mark all as read" });
+  }
 });
+
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const userId = req.userId;
+
+    const deleted = await prisma.notification.deleteMany({
+      where: { id, userId },
+    });
+
+    if (deleted.count === 0) {
+      return res.status(404).json({ message: "Notification not found or not yours" });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete notification" });
+  }
+});
+
 
 
 export default router;
