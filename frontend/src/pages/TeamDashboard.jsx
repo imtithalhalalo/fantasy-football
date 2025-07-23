@@ -7,12 +7,14 @@ import {
   Button,
   Divider,
   Tooltip,
+  Link,
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axiosInstance";
 import TeamSkeleton from "./skeletons/TeamDashBoardSkeleton";
 import SalePriceDialog from "./components/SalePriceDialog";
 import MessageScreen from "./components/Message";
+import { Link as RouterLink } from "react-router-dom";
 
 export default function TeamDashboard() {
   const queryClient = useQueryClient();
@@ -77,12 +79,39 @@ export default function TeamDashboard() {
 
   return (
     <Box sx={{ p: 4, bgcolor: "white", minHeight: "100vh" }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold", color: "#9333ea" }}>
-        {team.name}
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: "bold", color: "#9333ea" }}>
+          {team.name}
+        </Typography>
+
+        <Link
+          component={RouterLink}
+          to="/transfer"
+          sx={{
+            color: "#9333ea",
+            fontWeight: "bold",
+            textDecoration: "none",
+            "&:hover": {
+              color: "#7e22ce",
+              textDecoration: "underline",
+            },
+          }}
+        >
+          Go to Transfer Market →
+        </Link>
+      </Box>
+
       <Typography variant="h6" sx={{ mb: 1, color: "#555" }}>
         Budget: ${team.budget.toLocaleString()}
       </Typography>
+
       <Typography variant="body1" sx={{ mb: 4, color: "#777" }}>
         Total Players: {team.players.length}
       </Typography>
@@ -129,8 +158,6 @@ export default function TeamDashboard() {
                       border: isNewlyBought ? "2px solid #9333ea" : undefined,
                     }}
                   >
-                    
-
                     {isNewlyBought && player.boughtFrom && (
                       <Tooltip
                         title={

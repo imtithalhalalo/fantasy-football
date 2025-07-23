@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -17,6 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Link,
 } from "@mui/material";
 import api from "../api/axiosInstance";
 import { useDebounce } from "../hooks/useDebounce";
@@ -34,16 +36,14 @@ export default function TransferMarket() {
   const debouncedFilters = useDebounce(filters, 500);
 
   const [message, setMessage] = useState(null);
-  const {
-    data: team
-  } = useQuery({
+  const { data: team } = useQuery({
     queryKey: ["team"],
     queryFn: async () => {
       const res = await api.get("/team");
       return res.data;
     },
   });
-  
+
   const {
     data: players = [],
     isLoading,
@@ -121,12 +121,34 @@ export default function TransferMarket() {
 
   return (
     <Box sx={{ p: 4, bgcolor: "white", minHeight: "100vh" }}>
-      <Typography
-        variant="h4"
-        sx={{ fontWeight: "bold", color: "#9333ea", mb: 2 }}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
       >
-        Transfer Market
-      </Typography>
+        <Typography variant="h4" sx={{ fontWeight: "bold", color: "#9333ea" }}>
+          Transfer Market
+        </Typography>
+
+        <Link
+          component={RouterLink}
+          to="/team"
+          sx={{
+            color: "#9333ea",
+            fontWeight: "bold",
+            textDecoration: "none",
+            "&:hover": {
+              color: "#7e22ce",
+              textDecoration: "underline",
+            },
+          }}
+        >
+          Go to My Team →
+        </Link>
+      </Box>
       <Typography variant="h6" sx={{ mb: 1, color: "#555" }}>
         Budget: ${team.budget.toLocaleString()}
       </Typography>
