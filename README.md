@@ -57,6 +57,8 @@ asking price.
     - Updating schema                                        ~30 mins
     - Adding api to retreive notifications                   ~45 mins
     - Create notification in buy                             ~10 mins
+    - Adding delete for the notification                     ~ 30 mins
+    - Mark all read when clicking on bell
 
 - Add budget to transfer market                              ~10 mins
 - Adding condition to disable button for sale if user have only 15 players ~12 mins
