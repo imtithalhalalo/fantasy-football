@@ -23,6 +23,7 @@ import {
 import api from "../api/axiosInstance";
 import { useDebounce } from "../hooks/useDebounce";
 import confetti from "canvas-confetti";
+import ConfirmBuyDialog from "./components/ConfirmBuyDialog";
 
 export default function TransferMarket() {
   const queryClient = useQueryClient();
@@ -248,61 +249,13 @@ export default function TransferMarket() {
         ))}
       </Grid>
 
-      {/* TODO: move to separate component */}
-      <Dialog
+      <ConfirmBuyDialog
         open={!!selectedPlayer}
-        fullWidth
-        maxWidth="sm"
-        onClose={(_, reason) => {
-          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
-          setSelectedPlayer(null);
-        }}
-      >
-        <DialogTitle sx={{ m: 0, p: 2, position: "relative" }}>
-          Confirm Purchase
-          <IconButton
-            aria-label="close"
-            onClick={() => setSelectedPlayer(null)}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          {selectedPlayer && (
-            <>
-              <Typography>
-                Are you sure you want to buy{" "}
-                <strong>{selectedPlayer.name}</strong>?
-              </Typography>
-              <Typography sx={{ mt: 1 }}>
-                Original Price:{" "}
-                <strong>${selectedPlayer.askingPrice.toLocaleString()}</strong>
-              </Typography>
-              <Typography sx={{ color: "green", mt: 1 }}>
-                Discounted Price (95%):{" "}
-                <strong>
-                  ${(selectedPlayer.askingPrice * 0.95).toLocaleString()}
-                </strong>
-              </Typography>
-            </>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleConfirmBuy}
-            variant="contained"
-            sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
-          >
-            Confirm & Buy
-          </Button>
-        </DialogActions>
-      </Dialog>
+        player={selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        onConfirm={handleConfirmBuy}
+        isLoading={buyMutation.isLoading}
+      />
     </Box>
   );
 }
