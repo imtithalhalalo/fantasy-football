@@ -132,7 +132,10 @@ The frontend should now be running on [http://localhost:5173](http://localhost:5
    ```sh
    npx prisma studio
    ```
-
+5. Generate Prisma
+    ```sh
+   npx prisma generate
+   ```
 ---
 
 ## Database Setup 
